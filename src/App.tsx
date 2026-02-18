@@ -19,7 +19,7 @@ function App() {
     const [inputValue, setInputValue] = useState<string>("");
 
     const API = axios.create({
-        baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/",
+        baseURL: import.meta.env.VITE_API_URL,
     });
 
     useEffect(() => {

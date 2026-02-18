@@ -38,7 +38,7 @@ const Task: FC<TaskProps> = ({
     const [inputValue, setInputValue] = useState<string>(title);
 
     const API = axios.create({
-        baseURL: "http://localhost:8080/",
+        baseURL: import.meta.env.VITE_API_URL,
     });
 
     const formatDate = (date: string | Date) => {
