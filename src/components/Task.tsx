@@ -71,12 +71,18 @@ const Task: FC<TaskProps> = ({
 
     const renameTask = async (id: number, title: string) => {
         try {
+            const loadingToast = toast.loading("Переименовываем задачу...");
             await API.put(`/tasks/${id}`, {
                 title,
             });
             setTasks((tasks) =>
                 tasks.map((t) => (t.id === id ? { ...t, title } : t)),
             );
+            toast("Задача успешно переименована!", {
+                id: loadingToast,
+                icon: "✅",
+                duration: 3000,
+            });
         } catch (error) {
             console.log(error);
         } finally {
@@ -112,9 +118,7 @@ const Task: FC<TaskProps> = ({
             );
 
             toast.success(
-                newStatus
-                    ? "🎉 Задача выполнена!"
-                    : "Задача возвращена в работу",
+                newStatus ? "Задача выполнена!" : "Задача возвращена в работу",
                 {
                     id: loadingToast,
                     icon: newStatus ? "✅ " : "↩️ ",
