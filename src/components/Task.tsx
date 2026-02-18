@@ -38,7 +38,7 @@ const Task: FC<TaskProps> = ({
     const [inputValue, setInputValue] = useState<string>(title);
 
     const API = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
+        baseURL: "https://api.todo.lucidiusss.lol",
     });
 
     const formatDate = (date: string | Date) => {
@@ -63,10 +63,9 @@ const Task: FC<TaskProps> = ({
             await API.delete(`tasks/${id}`).then(() => {
                 setTasks(tasks.filter((t) => t.id !== id));
             });
+            toast("✅ Задача успешно удалена!");
         } catch (error) {
             console.log(error);
-        } finally {
-            toast("✅ Задача успешно удалена!");
         }
     };
 
