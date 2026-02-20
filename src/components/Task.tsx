@@ -7,8 +7,8 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { format, parseISO } from "date-fns";
-import { ru } from "date-fns/locale";
+import { formatDistance, formatRelative, parseISO } from "date-fns";
+import { enUS } from "date-fns/locale";
 import { Button } from "./ui/button";
 import { Check, Edit, X } from "lucide-react";
 import { Checkbox } from "./ui/checkbox";
@@ -36,9 +36,10 @@ const Task: FC<TaskProps> = ({
 }) => {
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [inputValue, setInputValue] = useState<string>(title);
+    const [originalTitle, setOriginalTitle] = useState<string>(title);
 
     const API = axios.create({
-        baseURL: "https://api.todo.lucidiusss.lol",
+        baseURL: import.meta.env.VITE_API_URL,
     });
 
     const formatDate = (date: string | Date) => {
@@ -51,7 +52,7 @@ const Task: FC<TaskProps> = ({
                 dateObj = date;
             }
 
-            return format(dateObj, "dd.MM.yyyy HH:mm", { locale: ru });
+            return formatRelative(dateObj, dateObj, { locale: enUS });
         } catch (error) {
             console.log(error);
             return "Неверная дата";
@@ -63,7 +64,7 @@ const Task: FC<TaskProps> = ({
             await API.delete(`tasks/${id}`).then(() => {
                 setTasks(tasks.filter((t) => t.id !== id));
             });
-            toast("✅ Задача успешно удалена!");
+            toast("✅ Task was successfully deleted!");
         } catch (error) {
             console.log(error);
         }
@@ -71,20 +72,33 @@ const Task: FC<TaskProps> = ({
 
     const renameTask = async (id: number, title: string) => {
         try {
-            const loadingToast = toast.loading("Переименовываем задачу...");
+            if (originalTitle.trim() === inputValue.trim()) {
+                console.log("task was not changed");
+                setIsEditing(false);
+                return;
+            }
+
+            const loadingToast = toast.loading("Renaming task...");
             await API.put(`/tasks/${id}`, {
-                title,
+                title: title.trim(),
             });
             setTasks((tasks) =>
                 tasks.map((t) => (t.id === id ? { ...t, title } : t)),
             );
-            toast("Задача успешно переименована!", {
+            toast("Task was successfully renamed!", {
                 id: loadingToast,
                 icon: "✅",
                 duration: 3000,
             });
+            setOriginalTitle(inputValue.trim());
         } catch (error) {
-            console.log(error);
+            toast.dismiss();
+            if (axios.isAxiosError(error)) {
+                const errorMessage = error.response?.data?.error;
+
+                console.log(errorMessage);
+                toast(`❌ ${errorMessage}`);
+            }
         } finally {
             setIsEditing(false);
         }
@@ -95,7 +109,7 @@ const Task: FC<TaskProps> = ({
             const currentTask = tasks.find((t) => t.id === id);
 
             if (!currentTask) {
-                toast.error("Задача не найдена");
+                toast.error("🛠️ Task was not found");
                 return;
             }
 
@@ -104,7 +118,9 @@ const Task: FC<TaskProps> = ({
 
             // Показываем тост в зависимости от того, что делаем
             const loadingToast = toast.loading(
-                newStatus ? "Выполняем задачу..." : "Возвращаем задачу...",
+                newStatus
+                    ? "Doing task..."
+                    : "Task is back to in-progress state...",
             );
 
             await API.post(`tasks/${id}/toggle`).then((res) =>
@@ -118,7 +134,7 @@ const Task: FC<TaskProps> = ({
             );
 
             toast.success(
-                newStatus ? "Задача выполнена!" : "Задача возвращена в работу",
+                newStatus ? "Task is done!" : "Task is now in progress",
                 {
                     id: loadingToast,
                     icon: newStatus ? "✅ " : "↩️ ",
@@ -140,14 +156,21 @@ const Task: FC<TaskProps> = ({
                             onClick={() => toggleTask(id)}
                             className="md:h-6 md:w-6 data-[state=checked]:bg-green-500 data-[state=checked]:border-black/15"
                         />
-                        <div className="w-full flex flex-col cursor-default items-center">
+                        <div className="w-full flex flex-col cursor-default items-center mx-6">
                             {!isEditing ? (
-                                <p className="text-[18px] md:text-2xl mx-6">
+                                <p className="text-[18px] md:text-[20px] lg:text-[24px]">
                                     {title}
                                 </p>
                             ) : (
                                 <Input
-                                    className="mx-6 placeholder:text-gray-300 placeholder:text-2xl text-[18px] placeholder:text-[18px] md:w-2/3 md:text-2xl sm:py-3 sm:px-4 bg-gray-100 rounded-md"
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter"
+                                            ? renameTask(id, inputValue)
+                                            : e.key === "Escape"
+                                              ? setIsEditing(false)
+                                              : ""
+                                    }
+                                    className="placeholder:text-gray-300 md:placeholder:text-[20px] text-[18px] placeholder:text-[18px] w-full md:text-[20px] lg:text-[24px] sm:py-3 sm:px-4 bg-gray-100 rounded-md"
                                     value={inputValue}
                                     placeholder="type a new name for this task"
                                     onChange={(e) =>
@@ -157,7 +180,7 @@ const Task: FC<TaskProps> = ({
                             )}
                             {!isEditing ? (
                                 <TooltipContent>
-                                    <p>Создано: {formatDate(date)}</p>
+                                    <p>created {formatDate(date)}</p>
                                 </TooltipContent>
                             ) : (
                                 <></>
@@ -166,25 +189,28 @@ const Task: FC<TaskProps> = ({
                         <div className="ml-auto flex flex-row items-center">
                             {!isEditing ? (
                                 <Button
+                                    size="icon"
                                     onClick={() => setIsEditing(!isEditing)}
                                     className="bg-transparent hover:bg-black/5 group  active:bg-black"
                                 >
-                                    <Edit className="text-black group-active:text-white h-4 w-4 md:h-6 md:w-6" />
+                                    <Edit className="text-black group-active:text-white h-4 w-4 md:h-5 md:w-5" />
                                 </Button>
                             ) : (
                                 <Button
+                                    size="icon"
                                     onClick={() => renameTask(id, inputValue)}
                                     className="bg-transparent hover:bg-black/5 group  active:bg-black"
                                 >
-                                    <Check className="text-black group-active:text-white h-4 w-4 md:h-6 md:w-6" />
+                                    <Check className="text-black group-active:text-white h-4 w-4 md:h-5 md:w-5" />
                                 </Button>
                             )}
 
                             <Button
+                                size="icon"
                                 onClick={() => deleteTask(id)}
                                 className="bg-transparent hover:bg-black/5 group  active:bg-red-500"
                             >
-                                <X className="text-black group-active:text-white h-4 w-4 md:h-6 md:w-6" />
+                                <X className="text-black group-active:text-white h-4 w-4 md:h-5 md:w-5" />
                             </Button>
                         </div>
                     </div>

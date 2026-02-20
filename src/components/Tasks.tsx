@@ -9,7 +9,7 @@ interface TaskProps {
 
 const Tasks: FC<TaskProps> = ({ tasks, setTasks }) => {
     return (
-        <div className="flex flex-col  gap-5 items-center w-full md:w-2/3">
+        <div className="flex flex-col  gap-5 items-center w-full md:w-3/4">
             {tasks.map((t) => (
                 <Task
                     tasks={tasks}
