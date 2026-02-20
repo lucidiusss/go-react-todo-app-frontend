@@ -19,7 +19,7 @@ function App() {
     const [inputValue, setInputValue] = useState<string>("");
 
     const API = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
+        baseURL: "https://api.todo.lucidiusss.lol/api",
     });
 
     useEffect(() => {
@@ -31,7 +31,7 @@ function App() {
     const createTask = async (title: string) => {
         try {
             const newTitle = title.trim();
-            await API.post("/tasks", {
+            await API.post("/\tasks", {
                 title: newTitle,
             }).then((res) => {
                 setTasks([...tasks, res.data]);
