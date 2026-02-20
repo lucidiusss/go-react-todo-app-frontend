@@ -7,7 +7,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { formatDistance, formatRelative, parseISO } from "date-fns";
+import { formatRelative, parseISO } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { Button } from "./ui/button";
 import { Check, Edit, X } from "lucide-react";
