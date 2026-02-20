@@ -31,7 +31,7 @@ function App() {
     const createTask = async (title: string) => {
         try {
             const newTitle = title.trim();
-            await API.post("/\tasks", {
+            await API.post("/tasks", {
                 title: newTitle,
             }).then((res) => {
                 setTasks([...tasks, res.data]);
