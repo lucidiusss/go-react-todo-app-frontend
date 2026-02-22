@@ -22,7 +22,7 @@ function App() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const API = axios.create({
-        baseURL: import.meta.env.VITE_API_URL || process.env.VITE_API_URL,
+        baseURL: import.meta.env.VITE_API_URL,
     });
 
     useEffect(() => {
