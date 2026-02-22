@@ -39,7 +39,7 @@ const Task: FC<TaskProps> = ({
     const [originalTitle, setOriginalTitle] = useState<string>(title);
 
     const API = axios.create({
-        baseURL: "https://api.todo.lucidiuss.lol/api",
+        baseURL: "https://api.todo.lucidiusss.lol/api",
     });
 
     const formatDate = (date: string | Date) => {

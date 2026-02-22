@@ -22,7 +22,7 @@ function App() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const API = axios.create({
-        baseURL: "https://api.todo.lucidiuss.lol/api",
+        baseURL: "https://api.todo.lucidiusss.lol/api",
     });
 
     useEffect(() => {
