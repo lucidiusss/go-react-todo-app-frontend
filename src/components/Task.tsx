@@ -16,6 +16,7 @@ import axios from "axios";
 import type { TaskInterface } from "@/App";
 import { Input } from "./ui/input";
 import toast from "react-hot-toast";
+import { Spinner } from "./ui/spinner";
 
 interface TaskProps {
     id: number;
@@ -34,10 +35,11 @@ const Task: FC<TaskProps> = ({
     setTasks,
     tasks,
 }) => {
-    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [isRenaming, setIsRenaming] = useState<boolean>(false);
     const [inputValue, setInputValue] = useState<string>(title);
     const [originalTitle, setOriginalTitle] = useState<string>(title);
-
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    const [isEditing, setIsEditing] = useState<boolean>(false);
     const API = axios.create({
         baseURL: "https://api.todo.lucidiusss.lol/api",
     });
@@ -61,13 +63,15 @@ const Task: FC<TaskProps> = ({
 
     const deleteTask = async (id: number) => {
         try {
-            if (isEditing === false) {
+            setIsDeleting(true);
+            if (isRenaming === false) {
                 await API.delete(`tasks/${id}`).then(() => {
                     setTasks(tasks.filter((t) => t.id !== id));
                 });
                 toast("✅ Task was successfully deleted!");
+                setIsDeleting(false);
             } else {
-                setIsEditing(false);
+                setIsDeleting(false);
             }
         } catch (error) {
             console.log(error);
@@ -77,11 +81,10 @@ const Task: FC<TaskProps> = ({
     const renameTask = async (id: number, title: string) => {
         try {
             if (originalTitle.trim() === inputValue.trim()) {
-                console.log("task was not changed");
-                setIsEditing(false);
+                setIsRenaming(false);
                 return;
             }
-
+            setIsEditing(true);
             const loadingToast = toast.loading("Renaming task...");
             await API.put(`/tasks/${id}`, {
                 title: title.trim(),
@@ -95,6 +98,7 @@ const Task: FC<TaskProps> = ({
                 duration: 3000,
             });
             setOriginalTitle(inputValue.trim());
+            setIsEditing(false);
         } catch (error) {
             toast.dismiss();
             if (axios.isAxiosError(error)) {
@@ -104,7 +108,7 @@ const Task: FC<TaskProps> = ({
                 toast(`❌ ${errorMessage}`);
             }
         } finally {
-            setIsEditing(false);
+            setIsRenaming(false);
         }
     };
 
@@ -117,20 +121,15 @@ const Task: FC<TaskProps> = ({
                 return;
             }
 
-            // Определяем новый статус (противоположный текущему)
             const newStatus = !currentTask.completed;
 
-            // Показываем тост в зависимости от того, что делаем
             const loadingToast = toast.loading(
                 newStatus
                     ? "Doing task..."
                     : "Task is back to in-progress state...",
             );
 
-            await API.post(`tasks/${id}/toggle`).then((res) =>
-                console.log(res.data),
-            );
-
+            await API.post(`tasks/${id}/toggle`);
             setTasks((tasks) =>
                 tasks.map((t) =>
                     t.id === id ? { ...t, completed: !t.completed } : t,
@@ -161,17 +160,18 @@ const Task: FC<TaskProps> = ({
                             className="md:h-6 md:w-6 data-[state=checked]:bg-green-500 data-[state=checked]:border-black/15"
                         />
                         <div className="w-full flex flex-col cursor-default items-center mx-6">
-                            {!isEditing ? (
+                            {!isRenaming ? (
                                 <p className="text-[18px] md:text-[20px] lg:text-[24px]">
                                     {title}
                                 </p>
                             ) : (
                                 <Input
+                                    disabled={isEditing}
                                     onKeyDown={(e) =>
                                         e.key === "Enter"
                                             ? renameTask(id, inputValue)
                                             : e.key === "Escape"
-                                              ? setIsEditing(false)
+                                              ? setIsRenaming(false)
                                               : ""
                                     }
                                     className="placeholder:text-gray-300 md:placeholder:text-[20px] text-[18px] placeholder:text-[18px] w-full md:text-[20px] lg:text-[24px] sm:py-3 sm:px-4 bg-gray-100 rounded-md"
@@ -182,7 +182,7 @@ const Task: FC<TaskProps> = ({
                                     }
                                 />
                             )}
-                            {!isEditing ? (
+                            {!isRenaming ? (
                                 <TooltipContent>
                                     <p>created {formatDate(date)}</p>
                                 </TooltipContent>
@@ -191,10 +191,10 @@ const Task: FC<TaskProps> = ({
                             )}
                         </div>
                         <div className="ml-auto flex flex-row items-center">
-                            {!isEditing ? (
+                            {!isRenaming ? (
                                 <Button
                                     size="icon"
-                                    onClick={() => setIsEditing(!isEditing)}
+                                    onClick={() => setIsRenaming(!isRenaming)}
                                     className="bg-transparent hover:bg-black/5 group  active:bg-black"
                                 >
                                     <Edit className="text-black group-active:text-white h-4 w-4 md:h-5 md:w-5" />
@@ -205,16 +205,25 @@ const Task: FC<TaskProps> = ({
                                     onClick={() => renameTask(id, inputValue)}
                                     className="bg-transparent hover:bg-black/5 group  active:bg-black"
                                 >
-                                    <Check className="text-black group-active:text-white h-4 w-4 md:h-5 md:w-5" />
+                                    {isEditing ? (
+                                        <Spinner className="text-black group-active:text-white" />
+                                    ) : (
+                                        <Check className="text-black group-active:text-white h-4 w-4 md:h-5 md:w-5" />
+                                    )}
                                 </Button>
                             )}
 
                             <Button
                                 size="icon"
+                                disabled={isDeleting}
                                 onClick={() => deleteTask(id)}
                                 className="bg-transparent hover:bg-black/5 group  active:bg-red-500"
                             >
-                                <X className="text-black group-active:text-white h-4 w-4 md:h-5 md:w-5" />
+                                {isDeleting ? (
+                                    <Spinner className="text-black group-active:text-white" />
+                                ) : (
+                                    <X className="text-black group-active:text-white h-4 w-4 md:h-5 md:w-5" />
+                                )}
                             </Button>
                         </div>
                     </div>

@@ -31,7 +31,6 @@ function App() {
 
     const getTasks = async () => {
         try {
-            setIsLoading(true);
             await API.get("tasks").then((res) => {
                 setTasks(res.data);
             });
@@ -77,6 +76,7 @@ function App() {
                 </div>
                 <div className="w-full md:w-3/4 flex flex-row items-center gap-5">
                     <Input
+                        disabled={isAdding}
                         onKeyDown={(e) =>
                             e.key === "Enter" ? createTask(inputValue) : ""
                         }
@@ -87,12 +87,13 @@ function App() {
                     />
                     {inputValue.length > 0 ? (
                         <Button
+                            disabled={isAdding}
                             size="icon"
                             onClick={() => createTask(inputValue.trim())}
                             className="bg-gray-100 shadow border group  active:bg-green-500 hover:bg-gray-200"
                         >
                             {isAdding ? (
-                                <Spinner />
+                                <Spinner className="text-black group-active:text-white" />
                             ) : (
                                 <Plus
                                     size={18}
