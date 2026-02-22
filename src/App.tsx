@@ -6,6 +6,7 @@ import axios from "axios";
 import { Button } from "./components/ui/button";
 import { Plus } from "lucide-react";
 import toast from "react-hot-toast";
+import { Spinner } from "./components/ui/spinner";
 
 export interface TaskInterface {
     id: number;
@@ -17,19 +18,36 @@ export interface TaskInterface {
 function App() {
     const [tasks, setTasks] = useState<TaskInterface[]>([]);
     const [inputValue, setInputValue] = useState<string>("");
+    const [isAdding, setIsAdding] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const API = axios.create({
-        baseURL: "https://api.todo.lucidiusss.lol/api",
+        baseURL: "https://api.todo.lucidiuss.lol/api",
     });
 
     useEffect(() => {
-        API.get("tasks").then((res) => {
-            setTasks(res.data);
-        });
+        getTasks();
     }, []);
+
+    const getTasks = async () => {
+        try {
+            setIsLoading(true);
+            await API.get("tasks").then((res) => {
+                setTasks(res.data);
+            });
+            setIsLoading(false);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const errorMessage = error.response?.data?.error;
+                console.log(errorMessage);
+                toast(`❌ ${errorMessage}`);
+            }
+        }
+    };
 
     const createTask = async (title: string) => {
         try {
+            setIsAdding(true);
             const newTitle = title.trim();
             await API.post("/tasks", {
                 title: newTitle,
@@ -37,6 +55,7 @@ function App() {
                 setTasks([...tasks, res.data]);
             });
             toast("✅ New task is created!");
+            setIsAdding(false);
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 const errorMessage = error.response?.data?.error;
@@ -72,16 +91,24 @@ function App() {
                             onClick={() => createTask(inputValue.trim())}
                             className="bg-gray-100 shadow border group  active:bg-green-500 hover:bg-gray-200"
                         >
-                            <Plus
-                                size={18}
-                                className="text-black group-active:text-white"
-                            />
+                            {isAdding ? (
+                                <Spinner />
+                            ) : (
+                                <Plus
+                                    size={18}
+                                    className="text-black group-active:text-white"
+                                />
+                            )}
                         </Button>
                     ) : (
                         <></>
                     )}
                 </div>
-                <Tasks tasks={tasks} setTasks={setTasks} />
+                <Tasks
+                    isLoading={isLoading}
+                    tasks={tasks}
+                    setTasks={setTasks}
+                />
             </div>
         </div>
     );
