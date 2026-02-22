@@ -41,7 +41,7 @@ const Task: FC<TaskProps> = ({
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const API = axios.create({
-        baseURL: "https://api.todo.lucidiusss.lol/api",
+        baseURL: "http://localhost:8080/api",
     });
 
     const formatDate = (date: string | Date) => {
@@ -74,7 +74,13 @@ const Task: FC<TaskProps> = ({
                 setIsDeleting(false);
             }
         } catch (error) {
-            console.log(error);
+            toast.dismiss();
+            if (axios.isAxiosError(error)) {
+                const errorMessage = error.response?.data?.error;
+
+                console.log(errorMessage);
+                toast(`❌ ${errorMessage}`);
+            }
         }
     };
 
@@ -98,7 +104,6 @@ const Task: FC<TaskProps> = ({
                 duration: 3000,
             });
             setOriginalTitle(inputValue.trim());
-            setIsEditing(false);
         } catch (error) {
             toast.dismiss();
             if (axios.isAxiosError(error)) {
@@ -106,9 +111,11 @@ const Task: FC<TaskProps> = ({
 
                 console.log(errorMessage);
                 toast(`❌ ${errorMessage}`);
+                setInputValue(originalTitle.trim());
             }
         } finally {
             setIsRenaming(false);
+            setIsEditing(false);
         }
     };
 
@@ -145,7 +152,13 @@ const Task: FC<TaskProps> = ({
                 },
             );
         } catch (error) {
-            console.log(error);
+            toast.dismiss();
+            if (axios.isAxiosError(error)) {
+                const errorMessage = error.response?.data?.error;
+
+                console.log(errorMessage);
+                toast(`❌ ${errorMessage}`);
+            }
         }
     };
 

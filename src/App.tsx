@@ -22,7 +22,7 @@ function App() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const API = axios.create({
-        baseURL: "https://api.todo.lucidiusss.lol/api",
+        baseURL: "http://localhost:8080/api",
     });
 
     useEffect(() => {
@@ -36,6 +36,7 @@ function App() {
             });
             setIsLoading(false);
         } catch (error) {
+            toast.dismiss();
             if (axios.isAxiosError(error)) {
                 const errorMessage = error.response?.data?.error;
                 console.log(errorMessage);
@@ -54,8 +55,8 @@ function App() {
                 setTasks([...tasks, res.data]);
             });
             toast("✅ New task is created!");
-            setIsAdding(false);
         } catch (error) {
+            toast.dismiss();
             if (axios.isAxiosError(error)) {
                 const errorMessage = error.response?.data?.error;
                 console.log(errorMessage);
@@ -63,6 +64,7 @@ function App() {
             }
         } finally {
             setInputValue("");
+            setIsAdding(false);
         }
     };
 
