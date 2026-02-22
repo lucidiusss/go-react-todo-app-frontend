@@ -41,7 +41,7 @@ const Task: FC<TaskProps> = ({
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const API = axios.create({
-        baseURL: "http://localhost:8080/api",
+        baseURL: import.meta.env.VITE_API_URL,
     });
 
     const formatDate = (date: string | Date) => {

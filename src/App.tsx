@@ -22,7 +22,7 @@ function App() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const API = axios.create({
-        baseURL: "http://localhost:8080/api",
+        baseURL: import.meta.env.VITE_API_URL,
     });
 
     useEffect(() => {
