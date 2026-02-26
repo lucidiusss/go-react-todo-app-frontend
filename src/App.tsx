@@ -13,6 +13,8 @@ export interface TaskInterface {
     title: string;
     completed: boolean;
     created_at: Date;
+    updated_at: Date;
+    deleted_at: Date;
 }
 
 function App() {
@@ -31,9 +33,8 @@ function App() {
 
     const getTasks = async () => {
         try {
-            await API.get("tasks").then((res) => {
-                setTasks(res.data);
-            });
+            const { data } = await API.get("tasks");
+            setTasks(data.data);
             setIsLoading(false);
         } catch (error) {
             toast.dismiss();
@@ -49,11 +50,10 @@ function App() {
         try {
             setIsAdding(true);
             const newTitle = title.trim();
-            await API.post("/tasks", {
+            const { data } = await API.post("/tasks", {
                 title: newTitle,
-            }).then((res) => {
-                setTasks([...tasks, res.data]);
             });
+            setTasks([...tasks, data.data]);
             toast("✅ New task is created!");
         } catch (error) {
             toast.dismiss();

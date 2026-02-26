@@ -26,7 +26,8 @@ const Tasks: FC<TaskProps> = ({ tasks, setTasks, isLoading }) => {
                             setTasks={setTasks}
                             key={t.id}
                             title={t.title}
-                            date={t.created_at}
+                            createdAt={t.created_at}
+                            updatedAt={t.updated_at}
                             id={t.id}
                             completed={t.completed}
                         />

@@ -22,7 +22,8 @@ interface TaskProps {
     id: number;
     title: string;
     completed: boolean;
-    date: Date | string;
+    createdAt: Date | string;
+    updatedAt: Date | string;
     setTasks: Dispatch<SetStateAction<TaskInterface[]>>;
     tasks: TaskInterface[];
 }
@@ -30,7 +31,8 @@ interface TaskProps {
 const Task: FC<TaskProps> = ({
     id,
     title,
-    date,
+    createdAt,
+    updatedAt,
     completed,
     setTasks,
     tasks,
@@ -61,6 +63,9 @@ const Task: FC<TaskProps> = ({
         }
     };
 
+    const updated = formatDate(updatedAt);
+    const created = formatDate(createdAt);
+
     const deleteTask = async (id: number) => {
         try {
             setIsDeleting(true);
@@ -89,11 +94,16 @@ const Task: FC<TaskProps> = ({
             if (originalTitle.trim() === inputValue.trim()) {
                 setIsRenaming(false);
                 return;
+            } else if (inputValue.trim() == "") {
+                toast.dismiss();
+                toast(`❌ Title cannot be empty`);
+                setInputValue(originalTitle.trim());
+                return;
             }
             setIsEditing(true);
             const loadingToast = toast.loading("Renaming task...");
             await API.put(`/tasks/${id}`, {
-                title: title.trim(),
+                title: inputValue.trim(),
             });
             setTasks((tasks) =>
                 tasks.map((t) => (t.id === id ? { ...t, title } : t)),
@@ -107,9 +117,8 @@ const Task: FC<TaskProps> = ({
         } catch (error) {
             toast.dismiss();
             if (axios.isAxiosError(error)) {
-                const errorMessage = error.response?.data?.error;
+                const errorMessage = error.response?.data.message;
 
-                console.log(errorMessage);
                 toast(`❌ ${errorMessage}`);
                 setInputValue(originalTitle.trim());
             }
@@ -136,7 +145,9 @@ const Task: FC<TaskProps> = ({
                     : "Task is back to in-progress state...",
             );
 
-            await API.post(`tasks/${id}/toggle`);
+            await API.put(`tasks/${id}`, {
+                completed: !completed,
+            });
             setTasks((tasks) =>
                 tasks.map((t) =>
                     t.id === id ? { ...t, completed: !t.completed } : t,
@@ -197,7 +208,11 @@ const Task: FC<TaskProps> = ({
                             )}
                             {!isRenaming ? (
                                 <TooltipContent>
-                                    <p>created {formatDate(date)}</p>
+                                    <p>
+                                        {updated == created
+                                            ? `created ${created}`
+                                            : `updated ${updated}`}
+                                    </p>
                                 </TooltipContent>
                             ) : (
                                 <></>
